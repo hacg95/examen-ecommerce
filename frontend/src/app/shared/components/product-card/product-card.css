@@ -1,10 +1,13 @@
 .product-card {
+	display: block;
 	overflow: hidden;
 	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: 8px;
 	box-shadow: 0 16px 36px rgb(33 45 48 / 7%);
 	transition: transform 180ms ease, box-shadow 180ms ease;
+	color: inherit;
+	text-decoration: none;
 }
 
 .product-card:hover {
@@ -47,6 +50,6 @@
 .product-card h2 { margin: 0; color: var(--ink); font: 700 1.08rem/1.2 var(--font-display); }
 .product-card__footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .product-card__price { color: var(--ink); font: 700 1.3rem/1 var(--font-display); }
-.product-card button { border: 0; border-radius: 4px; padding: 10px 13px; color: #fff; background: var(--ink); cursor: pointer; font: 700 0.78rem var(--font-body); transition: background 180ms ease; }
-.product-card button:hover { background: var(--sage); }
-.product-card button span { margin-left: 4px; font-size: 1rem; }
+.product-card__action { border-radius: 4px; padding: 10px 13px; color: #fff; background: var(--ink); font: 700 0.78rem var(--font-body); transition: background 180ms ease; }
+.product-card:hover .product-card__action { background: var(--sage); }
+.product-card__action span { margin-left: 4px; font-size: 1rem; }

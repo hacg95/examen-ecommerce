@@ -1,1 +1,27 @@
-<p>product-detail works!</p>
+<main class="detail-page">
+	<a class="back-link" routerLink="/products">&lt;- Back to products</a>
+
+	@if (loading()) {
+		<div class="detail-state"><span class="loader"></span><p>Loading product...</p></div>
+	} @else if (error()) {
+		<div class="detail-state detail-state--error"><p>{{ error() }}</p></div>
+	} @else if (product(); as selectedProduct) {
+		<section class="detail-layout">
+			<div class="detail-image-wrap">
+				<img [src]="selectedProduct.imageUrl" [alt]="selectedProduct.name" />
+				<span class="detail-type">{{ selectedProduct.type }}</span>
+			</div>
+			<div class="detail-content">
+				<p class="detail-kicker">EXAMEN STORE / PRODUCT</p>
+				<h1>{{ selectedProduct.name }}</h1>
+				<p class="detail-price">{{ selectedProduct.price | currency: selectedProduct.currency }}</p>
+				<p class="detail-description">{{ selectedProduct.description }}</p>
+				<div class="detail-meta">
+					<span>Available stock</span>
+					<strong>{{ selectedProduct.stock }} units</strong>
+				</div>
+				<button class="detail-cart-button" type="button">Add to cart <span aria-hidden="true">+</span></button>
+			</div>
+		</section>
+	}
+</main>
