@@ -81,6 +81,7 @@ describe('DiscountsService', () => {
       quantity: 1,
       subtotal,
       discount: 0,
+      discountPercentage: 0,
       total: subtotal,
     };
   }

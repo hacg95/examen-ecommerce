@@ -60,6 +60,7 @@ describe('CartService', () => {
     expect(cart.items[0].quantity).toBe(5);
     expect(cart.items[0].subtotal).toBe(50);
     expect(cart.items[0].discount).toBe(5);
+    expect(cart.items[0].discountPercentage).toBe(10);
     expect(cart.items[0].total).toBe(45);
   });
 
@@ -69,9 +70,11 @@ describe('CartService', () => {
     expect(cart.items[0].quantity).toBe(5);
     expect(cart.items[0].subtotal).toBe(50);
     expect(cart.items[0].discount).toBe(5);
+    expect(cart.items[0].discountPercentage).toBe(10);
     expect(cart.items[0].total).toBe(45);
     expect(cart.subtotal).toBe(50);
     expect(cart.discount).toBe(5);
+    expect(cart.discountPercentage).toBe(10);
     expect(cart.total).toBe(45);
     expect(cart.appliedDiscounts).toHaveLength(0);
   });
@@ -84,9 +87,11 @@ describe('CartService', () => {
     expect(cart.items).toHaveLength(1);
     expect(cart.items[0].quantity).toBe(7);
     expect(cart.items[0].discount).toBe(7);
+    expect(cart.items[0].discountPercentage).toBe(10);
     expect(cart.items[0].total).toBe(63);
     expect(cart.subtotal).toBe(70);
     expect(cart.discount).toBe(7);
+    expect(cart.discountPercentage).toBe(10);
     expect(cart.total).toBe(63);
   });
 
@@ -97,17 +102,29 @@ describe('CartService', () => {
 
     expect(cart.coupon).toEqual({ code: 'WELCOME2026', valid: true });
     expect(cart.discount).toBe(11.75);
+    expect(cart.discountPercentage).toBe(23.5);
+    expect(cart.discountPercentage).toBeLessThanOrEqual(35);
     expect(cart.total).toBe(38.25);
     expect(cart.items[0].discount).toBe(5);
+    expect(cart.items[0].discountPercentage).toBe(10);
     expect(cart.items[0].total).toBe(45);
     expect(cart.appliedDiscounts).toHaveLength(1);
     expect(cart.appliedDiscounts[0].type).toBe('COUPON');
   });
 
   it('rejects an invalid coupon', () => {
+    service.addItem({ 'productId': 'prod-001', quantity: 1 });
+
     expect(() => service.applyCoupon('INVALID')).toThrow(
       'Coupon INVALID is not available',
     );
+  });
+
+  it('rejects applying a coupon when the cart is empty', () => {
+    expect(() => service.applyCoupon('WELCOME2026')).toThrow(
+      'Cannot apply a coupon to an empty cart',
+    );
+    expect(service.getItems().coupon).toBeUndefined();
   });
 
   it('rejects an unknown product', () => {
@@ -116,9 +133,19 @@ describe('CartService', () => {
     ).toThrow('Product with id missing-id not found');
   });
 
+  it('rejects cumulative quantities above the product stock', () => {
+    service.addItem({ 'productId': 'prod-001', quantity: 8 });
+
+    expect(() =>
+      service.addItem({ 'productId': 'prod-001', quantity: 3 }),
+    ).toThrow('Only 2 more units of product prod-001 are available');
+
+    expect(service.getItems().items[0].quantity).toBe(8);
+  });
+
   it('rejects a quantity above available stock', () => {
     expect(() =>
       service.addItem({ 'productId': 'prod-001', quantity: 11 }),
-    ).toThrow('Only 10 units of product prod-001 are available');
+    ).toThrow('Only 10 more units of product prod-001 are available');
   });
 });

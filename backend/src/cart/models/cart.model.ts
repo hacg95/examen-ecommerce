@@ -6,6 +6,7 @@ export interface Cart {
   items: CartItem[];
   subtotal: number;
   discount: number;
+  discountPercentage: number;
   total: number;
   appliedDiscounts: AppliedDiscount[];
   coupon?: Coupon;

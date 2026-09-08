@@ -5,5 +5,6 @@ export interface CartItem {
   quantity: number;
   subtotal: number;
   discount: number;
+  discountPercentage: number;
   total: number;
 }

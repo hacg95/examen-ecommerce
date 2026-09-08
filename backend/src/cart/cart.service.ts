@@ -13,6 +13,7 @@ export class CartService {
 		items: [],
 		subtotal: 0,
 		discount: 0,
+		discountPercentage: 0,
 		total: 0,
 		appliedDiscounts: [],
 	};
@@ -36,10 +37,6 @@ export class CartService {
 			throw new BadRequestException('product-id is required');
 		}
 
-		if (addCartItemDto.couponCode) {
-			this.cart.coupon = this.validateCoupon(addCartItemDto.couponCode);
-		}
-
 		if (!Number.isInteger(quantity) || quantity <= 0) {
 			throw new BadRequestException('quantity must be a positive integer');
 		}
@@ -53,13 +50,20 @@ export class CartService {
 		const existingItem = this.cart.items.find(
 			(item) => item.product.id === productId,
 		);
-		const requestedQuantity = (existingItem?.quantity ?? 0) + quantity;
+		const currentQuantity = existingItem?.quantity ?? 0;
+		const availableStock = product.stock - currentQuantity;
 
-		if (requestedQuantity > product.stock) {
+		if (quantity > availableStock) {
 			throw new BadRequestException(
-				`Only ${product.stock} units of product ${productId} are available`,
+				`Only ${availableStock} more units of product ${productId} are available`,
 			);
 		}
+
+		if (addCartItemDto.couponCode) {
+			this.cart.coupon = this.validateCoupon(addCartItemDto.couponCode);
+		}
+
+		const requestedQuantity = currentQuantity + quantity;
 
 		if (existingItem) {
 			existingItem.quantity = requestedQuantity;
@@ -72,6 +76,7 @@ export class CartService {
 				quantity,
 				subtotal: product.price * quantity,
 				discount: 0,
+				discountPercentage: 0,
 				total: product.price * quantity,
 			};
 			cartItem.discount = this.getTechDiscount(cartItem);
@@ -86,6 +91,10 @@ export class CartService {
 		this.updateItemTotals();
 		this.cart.subtotal = discountResult.originalAmount;
 		this.cart.discount = discountResult.discountAmount;
+		this.cart.discountPercentage = this.getDiscountPercentage(
+			this.cart.discount,
+			this.cart.subtotal,
+		);
 		this.cart.total = discountResult.finalAmount;
 		this.cart.appliedDiscounts = discountResult.appliedDiscounts;
 
@@ -93,6 +102,12 @@ export class CartService {
 	}
 
 	applyCoupon(code: string): Cart {
+		if (this.cart.items.length === 0) {
+			throw new BadRequestException(
+				'Cannot apply a coupon to an empty cart',
+			);
+		}
+
 		this.cart.coupon = this.validateCoupon(code);
 		this.updateDiscounts();
 
@@ -117,6 +132,10 @@ export class CartService {
 		this.updateItemTotals();
 		this.cart.subtotal = discountResult.originalAmount;
 		this.cart.discount = discountResult.discountAmount;
+		this.cart.discountPercentage = this.getDiscountPercentage(
+			this.cart.discount,
+			this.cart.subtotal,
+		);
 		this.cart.total = discountResult.finalAmount;
 		this.cart.appliedDiscounts = discountResult.appliedDiscounts;
 	}
@@ -130,7 +149,19 @@ export class CartService {
 	private updateItemTotals(): void {
 		for (const item of this.cart.items) {
 			item.discount = this.getTechDiscount(item);
+			item.discountPercentage = this.getDiscountPercentage(
+				item.discount,
+				item.subtotal,
+			);
 			item.total = item.subtotal - item.discount;
 		}
+	}
+
+	private getDiscountPercentage(discount: number, subtotal: number): number {
+		if (subtotal === 0) {
+			return 0;
+		}
+
+		return Math.round((discount / subtotal) * 10000) / 100;
 	}
 }
