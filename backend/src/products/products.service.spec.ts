@@ -15,4 +15,12 @@ describe('ProductsService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it('returns all products', () => {
+    expect(service.findAll()).toEqual([]);
+  });
+
+  it('returns undefined for an unknown product id', () => {
+    expect(service.findOne('missing-id')).toBeUndefined();
+  });
 });
