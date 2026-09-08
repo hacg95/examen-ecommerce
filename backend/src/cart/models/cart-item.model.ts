@@ -4,4 +4,6 @@ export interface CartItem {
   product: Product;
   quantity: number;
   subtotal: number;
+  discount: number;
+  total: number;
 }

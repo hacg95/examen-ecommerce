@@ -19,7 +19,7 @@ describe('ProductsController', () => {
   });
 
   it('returns all products', () => {
-    expect(controller.findAll()).toEqual([]);
+    expect(controller.findAll()).toHaveLength(5);
   });
 
   it('throws when a product does not exist', () => {

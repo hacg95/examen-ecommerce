@@ -15,4 +15,16 @@ describe('CouponsService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it('returns available coupons from the data source', () => {
+    expect(service.findAll()).toEqual([{ code: 'WELCOME2026', valid: true }]);
+  });
+
+  it('validates an available coupon code', () => {
+    expect(service.findByCode('WELCOME2026')).toEqual({
+      code: 'WELCOME2026',
+      valid: true,
+    });
+    expect(service.findByCode('INVALID')).toBeUndefined();
+  });
 });

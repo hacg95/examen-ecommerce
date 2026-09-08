@@ -17,7 +17,7 @@ describe('ProductsService', () => {
   });
 
   it('returns all products', () => {
-    expect(service.findAll()).toEqual([]);
+    expect(service.findAll()).toHaveLength(5);
   });
 
   it('returns undefined for an unknown product id', () => {

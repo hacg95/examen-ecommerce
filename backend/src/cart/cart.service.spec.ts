@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { jest } from '@jest/globals';
 import { CartService } from './cart.service';
 import { ProductsService } from '../products/products.service';
 import { DiscountsService } from '../discounts/discounts.service';
+import { CouponsService } from '../coupons/coupons.service';
 
 describe('CartService', () => {
   let service: CartService;
@@ -30,6 +32,14 @@ describe('CartService', () => {
           },
         },
         DiscountsService,
+        {
+          provide: CouponsService,
+          useValue: {
+            findByCode: jest.fn((code: string) =>
+              code === 'WELCOME2026' ? { code, valid: true } : undefined,
+            ),
+          },
+        },
       ],
     }).compile();
 
@@ -43,11 +53,14 @@ describe('CartService', () => {
   it('returns all items previously added to the cart', () => {
     service.addItem({ 'productId': 'prod-001', quantity: 5 });
 
-    const items = service.getItems();
+    const cart = service.getItems();
 
-    expect(items).toHaveLength(1);
-    expect(items[0].product.id).toBe('prod-001');
-    expect(items[0].quantity).toBe(5);
+    expect(cart.items).toHaveLength(1);
+    expect(cart.items[0].product.id).toBe('prod-001');
+    expect(cart.items[0].quantity).toBe(5);
+    expect(cart.items[0].subtotal).toBe(50);
+    expect(cart.items[0].discount).toBe(5);
+    expect(cart.items[0].total).toBe(45);
   });
 
   it('creates an item and calculates the cart subtotal', () => {
@@ -55,9 +68,12 @@ describe('CartService', () => {
 
     expect(cart.items[0].quantity).toBe(5);
     expect(cart.items[0].subtotal).toBe(50);
+    expect(cart.items[0].discount).toBe(5);
+    expect(cart.items[0].total).toBe(45);
     expect(cart.subtotal).toBe(50);
     expect(cart.discount).toBe(5);
     expect(cart.total).toBe(45);
+    expect(cart.appliedDiscounts).toHaveLength(0);
   });
 
   it('adds repeated quantities to the existing cart item', () => {
@@ -67,7 +83,31 @@ describe('CartService', () => {
 
     expect(cart.items).toHaveLength(1);
     expect(cart.items[0].quantity).toBe(7);
+    expect(cart.items[0].discount).toBe(7);
+    expect(cart.items[0].total).toBe(63);
     expect(cart.subtotal).toBe(70);
+    expect(cart.discount).toBe(7);
+    expect(cart.total).toBe(63);
+  });
+
+  it('applies a valid coupon and recalculates the cart total', () => {
+    service.addItem({ 'productId': 'prod-001', quantity: 5 });
+
+    const cart = service.applyCoupon('WELCOME2026');
+
+    expect(cart.coupon).toEqual({ code: 'WELCOME2026', valid: true });
+    expect(cart.discount).toBe(11.75);
+    expect(cart.total).toBe(38.25);
+    expect(cart.items[0].discount).toBe(5);
+    expect(cart.items[0].total).toBe(45);
+    expect(cart.appliedDiscounts).toHaveLength(1);
+    expect(cart.appliedDiscounts[0].type).toBe('COUPON');
+  });
+
+  it('rejects an invalid coupon', () => {
+    expect(() => service.applyCoupon('INVALID')).toThrow(
+      'Coupon INVALID is not available',
+    );
   });
 
   it('rejects an unknown product', () => {

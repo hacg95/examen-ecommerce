@@ -3,10 +3,11 @@ import { DiscountType } from './enums/discount-type.enum';
 import { AppliedDiscount } from './models/applied-discount.model';
 import { DiscountResult } from './models/discount-result.model';
 import { CartItem } from '../cart/models/cart-item.model';
+import { Coupon } from '../coupons/models/coupons.model';
 
 @Injectable()
 export class DiscountsService {
-	calculate(items: CartItem[], couponCode?: string): DiscountResult {
+	calculate(items: CartItem[], coupon?: Coupon): DiscountResult {
 		const originalAmount = this.round(
 			items.reduce((total, item) => total + item.subtotal, 0),
 		);
@@ -18,14 +19,6 @@ export class DiscountsService {
 				.reduce((total, item) => total + item.subtotal * 0.1, 0),
 		);
 
-		if (techDiscountAmount > 0) {
-			appliedDiscounts.push({
-				type: DiscountType.TECH,
-				percentage: 10,
-				amount: techDiscountAmount,
-			});
-		}
-
 		const amountAfterTech = originalAmount - techDiscountAmount;
 
 		if (amountAfterTech > 100) {
@@ -36,12 +29,13 @@ export class DiscountsService {
 			});
 		}
 
-		const amountAfterThreshold = appliedDiscounts.reduce(
-			(amount, discount) => amount - discount.amount,
-			originalAmount,
+		const thresholdDiscountAmount = appliedDiscounts.reduce(
+			(total, discount) => total + discount.amount,
+			0,
 		);
+		const amountAfterThreshold = amountAfterTech - thresholdDiscountAmount;
 
-		if (couponCode === 'WELCOME2026') {
+		if (coupon?.valid) {
 			appliedDiscounts.push({
 				type: DiscountType.COUPON,
 				percentage: 15,
@@ -50,17 +44,23 @@ export class DiscountsService {
 		}
 
 		const maximumDiscount = this.round(originalAmount * 0.35);
-		const discountAmount = this.round(
-			Math.min(
-				maximumDiscount,
-				appliedDiscounts.reduce((total, discount) => total + discount.amount, 0),
-			),
+		const globalDiscountAmount = appliedDiscounts.reduce(
+			(total, discount) => total + discount.amount,
+			0,
+		);
+		const allowedGlobalDiscount = this.round(
+			Math.max(0, maximumDiscount - techDiscountAmount),
+		);
+		const cappedGlobalDiscount = this.round(
+			Math.min(allowedGlobalDiscount, globalDiscountAmount),
 		);
 
-		this.capLastDiscount(appliedDiscounts, discountAmount);
+		this.capLastDiscount(appliedDiscounts, cappedGlobalDiscount);
+		const discountAmount = this.round(techDiscountAmount + cappedGlobalDiscount);
 
 		return {
 			originalAmount,
+			techDiscountAmount,
 			discountAmount,
 			finalAmount: this.round(originalAmount - discountAmount),
 			appliedDiscounts,
