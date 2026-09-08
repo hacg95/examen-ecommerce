@@ -20,7 +20,20 @@
 					<span>Available stock</span>
 					<strong>{{ selectedProduct.stock }} units</strong>
 				</div>
-				<button class="detail-cart-button" type="button">Add to cart <span aria-hidden="true">+</span></button>
+				<div class="quantity-control" aria-label="Product quantity">
+					<button type="button" aria-label="Decrease quantity" (click)="decreaseQuantity()">-</button>
+					<input type="number" min="1" [max]="selectedProduct.stock" [value]="quantity()" (input)="setQuantity($any($event.target).value)" />
+					<button type="button" aria-label="Increase quantity" (click)="increaseQuantity()">+</button>
+				</div>
+				<button class="detail-cart-button" type="button" [disabled]="adding()" (click)="addToCart()">
+					{{ adding() ? 'Adding...' : 'Add to cart' }} <span aria-hidden="true">+</span>
+				</button>
+				@if (addError()) {
+					<p class="detail-action-error">{{ addError() }}</p>
+				}
+				@if (addSuccess()) {
+					<p class="detail-action-success">{{ addSuccess() }}</p>
+				}
 			</div>
 		</section>
 	}

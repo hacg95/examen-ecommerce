@@ -12,8 +12,15 @@
 .detail-meta { display: flex; justify-content: space-between; max-width: 480px; margin: 30px 0; padding: 16px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 0.82rem; }
 .detail-meta strong { color: var(--ink); }
 .detail-cart-button { border: 0; border-radius: 4px; padding: 14px 18px; color: #fff; background: var(--ink); cursor: pointer; font: 700 0.82rem var(--font-body); }
+.detail-cart-button:disabled { opacity: 0.6; cursor: wait; }
 .detail-cart-button:hover { background: var(--sage); }
 .detail-cart-button span { margin-left: 5px; font-size: 1rem; }
+.quantity-control { display: flex; width: 136px; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.quantity-control button { width: 38px; border: 0; color: var(--ink); background: var(--paper); cursor: pointer; font-size: 1.1rem; }
+.quantity-control input { width: 60px; border: 0; outline: 0; color: var(--ink); background: var(--surface); text-align: center; font-weight: 700; }
+.detail-action-error, .detail-action-success { margin: 10px 0 0; font-size: 0.78rem; line-height: 1.4; }
+.detail-action-error { color: #b35d42; }
+.detail-action-success { color: var(--sage); }
 .detail-state { display: grid; place-items: center; min-height: 400px; color: var(--muted); }
 .detail-state--error { color: #b35d42; }
 .loader { width: 25px; height: 25px; margin-bottom: 16px; border: 2px solid var(--line); border-top-color: var(--sage); border-radius: 50%; animation: spin 800ms linear infinite; }

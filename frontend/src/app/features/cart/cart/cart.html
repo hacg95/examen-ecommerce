@@ -1,7 +1,6 @@
 <main class="cart-page">
 	<div class="cart-heading">
 		<div>
-			<p class="eyebrow">EXAMEN STORE / YOUR CART</p>
 			<h1>Your cart</h1>
 		</div>
 		<a routerLink="/products">Continue shopping <span aria-hidden="true">-&gt;</span></a>
@@ -14,8 +13,7 @@
 	} @else if (cart(); as currentCart) {
 		@if (currentCart.items.length === 0) {
 			<div class="empty-cart">
-				<p>Your cart is waiting for something good.</p>
-				<a routerLink="/products">Browse products</a>
+				<h2>Your cart is waiting for something good.</h2>
 			</div>
 		} @else {
 			<div class="cart-layout">
@@ -67,7 +65,10 @@
 							<p class="inline-error">{{ couponError() }}</p>
 						}
 						@if (currentCart.coupon) {
-							<p class="coupon-applied">{{ currentCart.coupon.code }} applied</p>
+								<div class="coupon-applied">
+									<span>{{ currentCart.coupon.code }} applied</span>
+									<button class="remove-button" type="button" (click)="removeCoupon(currentCart.coupon.code)" aria-label="Remove applied coupon" title="Remove coupon">&#128465;</button>
+								</div>
 						}
 					</div>
 					<div class="summary-lines">

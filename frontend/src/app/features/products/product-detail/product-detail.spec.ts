@@ -3,6 +3,7 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { ProductDetail } from './product-detail';
 import { Products } from '../services/products';
+import { CartService } from '../../cart/services/cart';
 
 describe('ProductDetail', () => {
   let component: ProductDetail;
@@ -20,6 +21,10 @@ describe('ProductDetail', () => {
         {
           provide: Products,
           useValue: { getById: () => of({}) },
+        },
+        {
+          provide: CartService,
+          useValue: { addItem: () => of({}) },
         },
       ],
     }).compileComponents();

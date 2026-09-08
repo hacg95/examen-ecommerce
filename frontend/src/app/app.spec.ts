@@ -2,12 +2,24 @@ import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
+import { CartService } from './features/cart/services/cart';
+import { of } from 'rxjs';
+import { signal } from '@angular/core';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes)],
+      providers: [
+        provideRouter(routes),
+        {
+          provide: CartService,
+          useValue: {
+            getCart: () => of({ items: [] }),
+            productCount: signal(0),
+          },
+        },
+      ],
     })
       .compileComponents();
   });

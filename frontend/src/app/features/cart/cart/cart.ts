@@ -50,6 +50,16 @@ export class Cart {
     });
   }
 
+  protected removeCoupon(code: string): void {
+    this.couponError.set('');
+    this.cartService.removeCoupon(code).subscribe({
+      next: (cart) => this.cart.set(cart),
+      error: (error: HttpErrorResponse) => {
+        this.couponError.set(this.getErrorMessage(error, 'Unable to remove coupon.'));
+      },
+    });
+  }
+
   protected removeItem(item: CartItem): void {
     this.itemErrors.update((errors) => ({ ...errors, [item.product.id]: '' }));
     this.cartService.removeItem(item.product.id).subscribe({
