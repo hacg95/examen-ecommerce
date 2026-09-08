@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ProductsService } from '../products/products.service';
+import { DiscountsService } from '../discounts/discounts.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { Cart } from './models/cart.model';
 import { CartItem } from './models/cart-item.model';
@@ -12,12 +13,16 @@ export class CartService {
 		subtotal: 0,
 		discount: 0,
 		total: 0,
+		appliedDiscounts: [],
 	};
 
-	constructor(private readonly productsService: ProductsService) {}
+	constructor(
+		private readonly productsService: ProductsService,
+		private readonly discountsService: DiscountsService,
+	) {}
 
-	getItems(): CartItem[] {
-		return this.cart.items;
+	getItems(): Cart {
+		return this.cart;
 	}
 
 	addItem(addCartItemDto: AddCartItemDto): Cart {
@@ -61,11 +66,14 @@ export class CartService {
 			this.cart.items.push(cartItem);
 		}
 
-		this.cart.subtotal = this.cart.items.reduce(
-			(subtotal, item) => subtotal + item.subtotal,
-			0,
+		const discountResult = this.discountsService.calculate(
+			this.cart.items,
+			addCartItemDto.couponCode,
 		);
-		this.cart.total = this.cart.subtotal - this.cart.discount;
+		this.cart.subtotal = discountResult.originalAmount;
+		this.cart.discount = discountResult.discountAmount;
+		this.cart.total = discountResult.finalAmount;
+		this.cart.appliedDiscounts = discountResult.appliedDiscounts;
 
 		return this.cart;
 	}

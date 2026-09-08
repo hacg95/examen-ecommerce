@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CartService } from './cart.service';
 import { ProductsService } from '../products/products.service';
+import { DiscountsService } from '../discounts/discounts.service';
 
 describe('CartService', () => {
   let service: CartService;
@@ -28,6 +29,7 @@ describe('CartService', () => {
             ),
           },
         },
+        DiscountsService,
       ],
     }).compile();
 
@@ -54,7 +56,8 @@ describe('CartService', () => {
     expect(cart.items[0].quantity).toBe(5);
     expect(cart.items[0].subtotal).toBe(50);
     expect(cart.subtotal).toBe(50);
-    expect(cart.total).toBe(50);
+    expect(cart.discount).toBe(5);
+    expect(cart.total).toBe(45);
   });
 
   it('adds repeated quantities to the existing cart item', () => {
