@@ -1,1 +1,83 @@
-<p>cart works!</p>
+<main class="cart-page">
+	<div class="cart-heading">
+		<div>
+			<p class="eyebrow">EXAMEN STORE / YOUR CART</p>
+			<h1>Your cart</h1>
+		</div>
+		<a routerLink="/products">Continue shopping <span aria-hidden="true">-&gt;</span></a>
+	</div>
+
+	@if (loading()) {
+		<div class="cart-state"><span class="loader"></span><p>Loading your cart...</p></div>
+	} @else if (error()) {
+		<div class="cart-state cart-state--error"><p>{{ error() }}</p></div>
+	} @else if (cart(); as currentCart) {
+		@if (currentCart.items.length === 0) {
+			<div class="empty-cart">
+				<p>Your cart is waiting for something good.</p>
+				<a routerLink="/products">Browse products</a>
+			</div>
+		} @else {
+			<div class="cart-layout">
+				<section class="cart-items" aria-label="Products in cart">
+					<div class="section-label"><span>Products</span><span>{{ currentCart.items.length }} items</span></div>
+					@for (item of currentCart.items; track item.product.id) {
+						<article class="cart-item">
+							<a class="cart-item__image" [routerLink]="['/product', item.product.id]">
+								<img [src]="item.product.imageUrl" [alt]="item.product.name" />
+							</a>
+							<div class="cart-item__details">
+								<div class="cart-item__topline">
+									<div>
+										<p class="cart-item__type">{{ item.product.type }}</p>
+										<h2>{{ item.product.name }}</h2>
+									</div>
+									<button class="remove-button" type="button" (click)="removeItem(item)" [attr.aria-label]="'Remove ' + item.product.name">
+										<span aria-hidden="true">&#128465;</span>
+									</button>
+								</div>
+								<div class="cart-item__meta">
+									<span>Quantity {{ item.quantity }}</span>
+									<span>{{ item.product.price | currency: item.product.currency }} each</span>
+								</div>
+								@if (itemError(item.product.id)) {
+									<p class="inline-error">{{ itemError(item.product.id) }}</p>
+								}
+								<div class="cart-item__totals">
+									<span>Subtotal {{ item.subtotal | currency: item.product.currency }}</span>
+									@if (item.discount > 0) {
+										<span class="item-discount">-{{ item.discount | currency: item.product.currency }} ({{ item.discountPercentage }}%)</span>
+									}
+									<strong>{{ item.total | currency: item.product.currency }}</strong>
+								</div>
+							</div>
+						</article>
+					}
+				</section>
+
+				<aside class="cart-summary" aria-label="Cart summary">
+					<p class="section-label">Summary</p>
+					<div class="coupon-form">
+						<label for="coupon-code">Coupon code</label>
+						<div class="coupon-input-row">
+							<input id="coupon-code" type="text" placeholder="Enter code" [value]="couponCode()" (input)="updateCouponCode($any($event.target).value)" (keydown.enter)="applyCoupon()" />
+							<button type="button" (click)="applyCoupon()">Apply</button>
+						</div>
+						@if (couponError()) {
+							<p class="inline-error">{{ couponError() }}</p>
+						}
+						@if (currentCart.coupon) {
+							<p class="coupon-applied">{{ currentCart.coupon.code }} applied</p>
+						}
+					</div>
+					<div class="summary-lines">
+						<div><span>Subtotal</span><strong>{{ currentCart.subtotal | currency: 'USD' }}</strong></div>
+						<div><span>Discount <small>({{ currentCart.discountPercentage }}%)</small></span><strong class="discount-value">-{{ currentCart.discount | currency: 'USD' }}</strong></div>
+					</div>
+					<div class="summary-total"><span>Total</span><strong>{{ currentCart.total | currency: 'USD' }}</strong></div>
+					<button class="checkout-button" type="button">Checkout <span aria-hidden="true">-&gt;</span></button>
+				</aside>
+			</div>
+		}
+	}
+</main>
