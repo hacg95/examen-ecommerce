@@ -2,6 +2,10 @@ import { Module } from '@nestjs/common';
 import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ProductsModule } from './products/products.module';
+import { CartModule } from './cart/cart.module';
+import { CouponsModule } from './coupons/coupons.module';
+import { DiscountsModule } from './discounts/discounts.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -14,6 +18,10 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       appSecret: 'YOUR_APP_SECRET',
       serviceId: 'backend',
     }),
+    ProductsModule,
+    CartModule,
+    CouponsModule,
+    DiscountsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
