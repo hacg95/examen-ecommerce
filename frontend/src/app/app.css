@@ -1,0 +1,5 @@
+.site-header { display: flex; align-items: center; justify-content: space-between; max-width: 1240px; margin: 0 auto; padding: 24px 32px; }
+.brand { color: var(--ink); font: 700 1.15rem var(--font-display); text-decoration: none; }
+.cart-button { display: flex; align-items: center; gap: 9px; border: 0; color: var(--ink); background: transparent; cursor: pointer; font: 700 0.78rem var(--font-body); }
+.cart-button strong { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; background: var(--ink); font-size: 0.66rem; }
+@media (max-width: 560px) { .site-header { padding: 20px; } }

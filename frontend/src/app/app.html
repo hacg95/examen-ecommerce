@@ -1,3 +1,9 @@
+<header class="site-header">
+  <a class="brand" routerLink="/products">Examen Store</a>
+  <button class="cart-button" type="button" aria-label="Cart"><span>Cart</span><strong>0</strong></button>
+</header>
+<router-outlet />
+<ng-template>
 <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
 <!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
 <!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
@@ -184,7 +190,7 @@
   }
 </style>
 
-<main class="main">
+<!-- <main class="main">
   <div class="content">
     <div class="left-side">
       <svg
@@ -330,7 +336,7 @@
       </div>
     </div>
   </div>
-</main>
+</main> -->
 
 <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
 <!-- * * * * * * * * * * * The content above * * * * * * * * * * * * -->
@@ -341,4 +347,4 @@
 <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
 
 
-<router-outlet />
+</ng-template>

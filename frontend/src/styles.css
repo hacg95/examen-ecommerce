@@ -1,1 +1,21 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap');
+
+:root {
+	--ink: #172726;
+	--muted: #6f7d79;
+	--sage: #557d70;
+	--coral: #c96e4d;
+	--surface: #fff;
+	--paper: #f4f3ee;
+	--line: #dfe4df;
+	--font-body: 'DM Sans', sans-serif;
+	--font-display: 'Playfair Display', serif;
+	color: var(--ink);
+	background: var(--paper);
+	font-family: var(--font-body);
+	-webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+button, input { font: inherit; }

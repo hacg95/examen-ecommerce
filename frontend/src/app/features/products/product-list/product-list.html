@@ -1,1 +1,29 @@
-<p>product-list works!</p>
+<main class="catalog-page">
+	<section class="catalog-toolbar" aria-label="Product filters">
+		<label class="search-field">
+			<span aria-hidden="true">⌕</span>
+			<input type="search" placeholder="Search the collection" [value]="searchTerm()" (input)="setSearchTerm($any($event.target).value)" />
+		</label>
+		<div class="type-filters">
+			<button type="button" [class.is-active]="activeType() === 'ALL'" (click)="setType('ALL')">All products</button>
+			@for (type of productTypes; track type) {
+				<button type="button" [class.is-active]="activeType() === type" (click)="setType(type)">{{ type }}</button>
+			}
+		</div>
+		<span class="result-count">{{ filteredProducts().length }} pieces</span>
+	</section>
+
+	@if (loading()) {
+		<div class="catalog-state"><span class="loader"></span><p>Gathering the collection...</p></div>
+	} @else if (error()) {
+		<div class="catalog-state catalog-state--error"><p>{{ error() }}</p></div>
+	} @else if (filteredProducts().length === 0) {
+		<div class="catalog-state"><p>No pieces match your search.</p></div>
+	} @else {
+		<section class="product-grid" aria-label="Product collection">
+			@for (product of filteredProducts(); track product.id) {
+				<app-product-card [product]="product" />
+			}
+		</section>
+	}
+</main>

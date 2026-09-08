@@ -1,1 +1,15 @@
-<p>product-card works!</p>
+<article class="product-card">
+	<div class="product-card__image-wrap">
+		<img [src]="product().imageUrl" [alt]="product().name" loading="lazy" />
+		<span class="product-card__type">{{ product().type }}</span>
+	</div>
+	<div class="product-card__body">
+		<div class="product-card__heading">
+			<h2>{{ product().name }}</h2>
+		</div>
+		<div class="product-card__footer">
+			<span class="product-card__price">{{ product().price | currency: product().currency }}</span>
+			<button type="button" aria-label="Add product to cart">Add to cart <span aria-hidden="true">+</span></button>
+		</div>
+	</div>
+</article>
