@@ -58,6 +58,7 @@ describe('CartService', () => {
     expect(cart.items).toHaveLength(1);
     expect(cart.items[0].product.id).toBe('prod-001');
     expect(cart.items[0].quantity).toBe(5);
+    expect(cart.items[0].availableStock).toBe(5);
     expect(cart.items[0].subtotal).toBe(50);
     expect(cart.items[0].discount).toBe(5);
     expect(cart.items[0].discountPercentage).toBe(10);
@@ -68,6 +69,7 @@ describe('CartService', () => {
     const cart = service.addItem({ 'productId': 'prod-001', quantity: 5 });
 
     expect(cart.items[0].quantity).toBe(5);
+    expect(cart.items[0].availableStock).toBe(5);
     expect(cart.items[0].subtotal).toBe(50);
     expect(cart.items[0].discount).toBe(5);
     expect(cart.items[0].discountPercentage).toBe(10);
@@ -86,6 +88,7 @@ describe('CartService', () => {
 
     expect(cart.items).toHaveLength(1);
     expect(cart.items[0].quantity).toBe(7);
+    expect(cart.items[0].availableStock).toBe(3);
     expect(cart.items[0].discount).toBe(7);
     expect(cart.items[0].discountPercentage).toBe(10);
     expect(cart.items[0].total).toBe(63);
@@ -106,6 +109,7 @@ describe('CartService', () => {
     expect(cart.discountPercentage).toBeLessThanOrEqual(35);
     expect(cart.total).toBe(38.25);
     expect(cart.items[0].discount).toBe(5);
+    expect(cart.items[0].availableStock).toBe(5);
     expect(cart.items[0].discountPercentage).toBe(10);
     expect(cart.items[0].total).toBe(45);
     expect(cart.appliedDiscounts).toHaveLength(1);
@@ -133,6 +137,38 @@ describe('CartService', () => {
     ).toThrow('Product with id missing-id not found');
   });
 
+  it('removes part of a cart item and recalculates stock and totals', () => {
+    service.addItem({ 'productId': 'prod-001', quantity: 8 });
+
+    const cart = service.removeItem('prod-001', 3);
+
+    expect(cart.items[0].quantity).toBe(5);
+    expect(cart.items[0].availableStock).toBe(5);
+    expect(cart.items[0].subtotal).toBe(50);
+    expect(cart.items[0].total).toBe(45);
+    expect(cart.subtotal).toBe(50);
+    expect(cart.total).toBe(45);
+  });
+
+  it('removes a complete cart item when quantity is omitted', () => {
+    service.addItem({ 'productId': 'prod-001', quantity: 2 });
+
+    const cart = service.removeItem('prod-001');
+
+    expect(cart.items).toHaveLength(0);
+    expect(cart.subtotal).toBe(0);
+    expect(cart.total).toBe(0);
+    expect(cart.discountPercentage).toBe(0);
+  });
+
+  it('rejects removing more units than are in the cart', () => {
+    service.addItem({ 'productId': 'prod-001', quantity: 2 });
+
+    expect(() => service.removeItem('prod-001', 3)).toThrow(
+      'Cannot remove 3 units of product prod-001; only 2 are in the cart',
+    );
+  });
+
   it('rejects cumulative quantities above the product stock', () => {
     service.addItem({ 'productId': 'prod-001', quantity: 8 });
 
@@ -147,5 +183,26 @@ describe('CartService', () => {
     expect(() =>
       service.addItem({ 'productId': 'prod-001', quantity: 11 }),
     ).toThrow('Only 10 more units of product prod-001 are available');
+  });
+
+  it('removes an applied coupon and recalculates the cart', () => {
+    service.addItem({ 'productId': 'prod-001', quantity: 5 });
+    service.applyCoupon('WELCOME2026');
+
+    const cart = service.removeCoupon('WELCOME2026');
+
+    expect(cart.coupon).toBeUndefined();
+    expect(cart.discount).toBe(5);
+    expect(cart.total).toBe(45);
+    expect(cart.appliedDiscounts).toHaveLength(0);
+  });
+
+  it('rejects removing a different coupon code', () => {
+    service.addItem({ 'productId': 'prod-001', quantity: 5 });
+    service.applyCoupon('WELCOME2026');
+
+    expect(() => service.removeCoupon('OTHER2026')).toThrow(
+      'Coupon OTHER2026 is not applied to the cart',
+    );
   });
 });

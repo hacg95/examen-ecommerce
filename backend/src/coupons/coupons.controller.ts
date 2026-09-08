@@ -1,6 +1,7 @@
 import {
 	Body,
 	Controller,
+	Delete,
 	Get,
 	Inject,
 	NotFoundException,
@@ -39,5 +40,10 @@ export class CouponsController {
 	@Post()
 	apply(@Body() applyCouponDto: ApplyCouponDto) {
 		return this.cartService.applyCoupon(applyCouponDto.code);
+	}
+
+	@Delete(':code')
+	remove(@Param('code') code: string) {
+		return this.cartService.removeCoupon(code);
 	}
 }

@@ -5,7 +5,11 @@ import { CartService } from './cart.service';
 
 describe('CartController', () => {
   let controller: CartController;
-  let cartService: { addItem: jest.Mock; getItems: jest.Mock };
+  let cartService: {
+    addItem: jest.Mock;
+    getItems: jest.Mock;
+    removeItem: jest.Mock;
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -13,7 +17,11 @@ describe('CartController', () => {
       providers: [
         {
           provide: CartService,
-          useValue: { addItem: jest.fn(), getItems: jest.fn() },
+          useValue: {
+            addItem: jest.fn(),
+            getItems: jest.fn(),
+            removeItem: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -42,5 +50,13 @@ describe('CartController', () => {
 
     expect(controller.getItems()).toBe(items);
     expect(cartService.getItems).toHaveBeenCalled();
+  });
+
+  it('removes the whole item when quantity is omitted', () => {
+    const cart = { items: [] };
+    cartService.removeItem.mockReturnValue(cart);
+
+    expect(controller.removeItem('prod-001')).toBe(cart);
+    expect(cartService.removeItem).toHaveBeenCalledWith('prod-001', undefined);
   });
 });

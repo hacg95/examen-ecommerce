@@ -74,6 +74,7 @@ export class CartService {
 			const cartItem: CartItem = {
 				product,
 				quantity,
+				availableStock: product.stock - quantity,
 				subtotal: product.price * quantity,
 				discount: 0,
 				discountPercentage: 0,
@@ -84,19 +85,49 @@ export class CartService {
 			this.cart.items.push(cartItem);
 		}
 
-		const discountResult = this.discountsService.calculate(
-			this.cart.items,
-			this.cart.coupon,
+		this.updateDiscounts();
+
+		return this.cart;
+	}
+
+	removeItem(productId: string, quantity?: number): Cart {
+		const itemIndex = this.cart.items.findIndex(
+			(item) => item.product.id === productId,
 		);
-		this.updateItemTotals();
-		this.cart.subtotal = discountResult.originalAmount;
-		this.cart.discount = discountResult.discountAmount;
-		this.cart.discountPercentage = this.getDiscountPercentage(
-			this.cart.discount,
-			this.cart.subtotal,
-		);
-		this.cart.total = discountResult.finalAmount;
-		this.cart.appliedDiscounts = discountResult.appliedDiscounts;
+
+		if (itemIndex === -1) {
+			throw new NotFoundException(
+				`Product with id ${productId} is not in the cart`,
+			);
+		}
+
+		const item = this.cart.items[itemIndex];
+		const quantityToRemove = quantity ?? item.quantity;
+
+		if (!Number.isInteger(quantityToRemove) || quantityToRemove <= 0) {
+			throw new BadRequestException(
+				'quantity must be a positive integer',
+			);
+		}
+
+		if (quantityToRemove > item.quantity) {
+			throw new BadRequestException(
+				`Cannot remove ${quantityToRemove} units of product ${productId}; only ${item.quantity} are in the cart`,
+			);
+		}
+
+		if (quantityToRemove === item.quantity) {
+			this.cart.items.splice(itemIndex, 1);
+		} else {
+			item.quantity -= quantityToRemove;
+			item.subtotal = item.product.price * item.quantity;
+		}
+
+		if (this.cart.items.length === 0) {
+			this.cart.coupon = undefined;
+		}
+
+		this.updateDiscounts();
 
 		return this.cart;
 	}
@@ -109,6 +140,23 @@ export class CartService {
 		}
 
 		this.cart.coupon = this.validateCoupon(code);
+		this.updateDiscounts();
+
+		return this.cart;
+	}
+
+	removeCoupon(code: string): Cart {
+		if (!this.cart.coupon) {
+			throw new BadRequestException('There is no coupon applied to the cart');
+		}
+
+		if (this.cart.coupon.code !== code) {
+			throw new BadRequestException(
+				`Coupon ${code} is not applied to the cart`,
+			);
+		}
+
+		this.cart.coupon = undefined;
 		this.updateDiscounts();
 
 		return this.cart;
@@ -148,6 +196,7 @@ export class CartService {
 
 	private updateItemTotals(): void {
 		for (const item of this.cart.items) {
+			item.availableStock = Math.max(0, item.product.stock - item.quantity);
 			item.discount = this.getTechDiscount(item);
 			item.discountPercentage = this.getDiscountPercentage(
 				item.discount,
