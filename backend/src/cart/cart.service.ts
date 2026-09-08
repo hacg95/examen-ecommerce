@@ -60,6 +60,7 @@ export class CartService {
 		}
 
 		if (addCartItemDto.couponCode) {
+			this.ensureCouponIsNotAlreadyApplied(addCartItemDto.couponCode);
 			this.cart.coupon = this.validateCoupon(addCartItemDto.couponCode);
 		}
 
@@ -139,6 +140,7 @@ export class CartService {
 			);
 		}
 
+		this.ensureCouponIsNotAlreadyApplied(code);
 		this.cart.coupon = this.validateCoupon(code);
 		this.updateDiscounts();
 
@@ -170,6 +172,12 @@ export class CartService {
 		}
 
 		return coupon;
+	}
+
+	private ensureCouponIsNotAlreadyApplied(code: string): void {
+		if (this.cart.coupon?.code === code) {
+			throw new BadRequestException(`Coupon ${code} is already in use`);
+		}
 	}
 
 	private updateDiscounts(): void {

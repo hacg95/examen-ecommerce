@@ -124,6 +124,28 @@ describe('CartService', () => {
     );
   });
 
+  it('rejects applying the same coupon twice', () => {
+    service.addItem({ 'productId': 'prod-001', quantity: 1 });
+    service.applyCoupon('WELCOME2026');
+
+    expect(() => service.applyCoupon('WELCOME2026')).toThrow(
+      'Coupon WELCOME2026 is already in use',
+    );
+  });
+
+  it('rejects a duplicate coupon in an item request', () => {
+    service.addItem({ 'productId': 'prod-001', quantity: 1 });
+    service.applyCoupon('WELCOME2026');
+
+    expect(() =>
+      service.addItem({
+        'productId': 'prod-001',
+        quantity: 1,
+        couponCode: 'WELCOME2026',
+      }),
+    ).toThrow('Coupon WELCOME2026 is already in use');
+  });
+
   it('rejects applying a coupon when the cart is empty', () => {
     expect(() => service.applyCoupon('WELCOME2026')).toThrow(
       'Cannot apply a coupon to an empty cart',
