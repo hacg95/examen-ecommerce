@@ -20,7 +20,181 @@ ocupa de presentación, navegación y experiencia de usuario; NestJS
 concentra reglas de negocio, estado del carrito, productos, stock,
 cupones y descuentos.
 
-## 2. Backend: arquitectura modular por dominio
+
+## 2. Selección del stack tecnológico y diseño de carpetas
+
+### ¿Por qué Angular para el frontend?
+
+Angular fue seleccionado porque el ejercicio requiere una aplicación web con navegación, consumo de APIs, manejo de estado de interfaz, formularios, validaciones y componentes reutilizables. Para este tipo de solución Angular aporta una estructura definida desde el framework y reduce decisiones accidentales sobre organización.
+
+En este proyecto se utilizan componentes standalone, servicios para encapsular comunicación HTTP, routing para las vistas de productos y carrito, modelos TypeScript y una organización por `features`.
+
+La elección favorece tipado estático, inyección de dependencias, separación entre componentes y servicios, routing integrado, reutilización y capacidad de prueba.
+
+### ¿Por qué NestJS para el backend?
+
+NestJS fue seleccionado porque el dominio requiere exponer una API HTTP con varias responsabilidades de negocio: productos, carrito, cupones, descuentos y control de stock.
+
+NestJS proporciona de forma nativa módulos, controladores, servicios, DTOs e inyección de dependencias. Esto permite representar esas responsabilidades sin construir manualmente una infraestructura alrededor de Express.
+
+```text
+backend/src/
+├── products/
+├── cart/
+├── discounts/
+└── coupons/
+```
+
+La organización por dominio/feature busca que los elementos que cambian por una misma razón permanezcan juntos. Esto mejora cohesión, navegación del código, mantenibilidad y capacidad de prueba.
+
+### ¿Por qué un monorepositorio?
+
+```text
+examen-ecommerce/
+├── frontend/
+└── backend/
+```
+
+Para el alcance de la prueba, un único repositorio simplifica versionamiento, revisión y entrega. Frontend y backend conservan independencia de dependencias y ejecución, pero evolucionan dentro del mismo repositorio.
+
+No se introdujo una solución de microservicios porque el dominio y la escala de la prueba no justificaban el costo operativo y de coordinación adicional.
+
+## 3. Trade-offs de arquitectura asumidos
+
+### 3.1 Simplicidad vs. extensibilidad
+
+Se eligió un backend modular en un único proceso NestJS en lugar de microservicios.
+
+**Beneficio:** menor complejidad operacional, desarrollo más rápido y debugging sencillo.
+
+**Costo:** los módulos comparten proceso y despliegue. Si en el futuro inventario, promociones u órdenes necesitaran escalar independientemente, sería necesario evolucionar la arquitectura.
+
+### 3.2 Estado en memoria/JSON vs. persistencia real
+
+Para el alcance del ejercicio se utiliza una solución de persistencia liviana y estado en memoria.
+
+**Beneficio:** reduce infraestructura y permite concentrarse en reglas de negocio e integración.
+
+**Costo:** no existe durabilidad completa, concurrencia multiinstancia ni garantías transaccionales equivalentes a una base de datos.
+
+En producción, productos, carritos, cupones e inventario deberían respaldarse con persistencia real y mecanismos de concurrencia adecuados.
+
+### 3.3 Claridad del cálculo vs. optimización prematura
+
+El cálculo de descuentos se ejecuta de manera síncrona y secuencial.
+
+**Beneficio:** comportamiento determinista, fácil de probar y suficientemente rápido para el volumen del ejercicio.
+
+**Costo:** con miles de reglas promocionales o dependencias externas podría ser necesario optimizar, cachear o desacoplar parte del cálculo.
+
+Se priorizó claridad del algoritmo y velocidad de entrega sobre optimizaciones no justificadas por el alcance.
+
+### 3.4 Reglas en backend vs. duplicación en frontend
+
+Las reglas críticas —stock, validez del cupón y descuentos— se mantienen en el backend.
+
+El frontend puede repetir algunas validaciones para mejorar UX, pero la decisión final pertenece al servidor.
+
+### 3.5 Abstracción mínima vs. complejidad futura
+
+No se creó una abstracción independiente para cada posible necesidad futura. Por ejemplo, no existe un módulo de Checkout ni una capa completa de repositorios.
+
+**Beneficio:** menor complejidad accidental.
+
+**Costo:** cuando aparezcan órdenes, pagos o persistencia productiva habrá que introducir nuevas abstracciones.
+
+El criterio fue aplicar YAGNI de forma pragmática: crear una abstracción cuando exista una responsabilidad real.
+
+## 4. Aislamiento del motor matemático de descuentos
+
+Una decisión central fue separar las reglas matemáticas de descuentos de los controladores HTTP y de la persistencia.
+
+```text
+HTTP Request
+    ↓
+Controller
+    ↓
+CartService
+    ↓
+DiscountsService
+    ↓
+DiscountResult
+```
+
+Los controladores se ocupan del transporte HTTP. `CartService` coordina el caso de uso. `DiscountsService` encapsula el algoritmo matemático.
+
+El motor no necesita conocer rutas HTTP, `Request`, `Response` ni detalles de Angular.
+
+También queda aislado de la fuente de datos:
+
+```text
+JSON / futura DB
+       ↓
+ProductsService / CouponsService
+       ↓
+modelos de dominio
+       ↓
+DiscountsService
+```
+
+Por lo tanto, cambiar JSON por PostgreSQL, DynamoDB u otra fuente no debería obligar a reescribir las fórmulas del motor de descuentos.
+
+## 5. Patrones de diseño aplicados
+
+### Patrón 1: Service Layer — implementado
+
+La solución utiliza **Service Layer** para encapsular operaciones y reglas fuera de controladores y componentes.
+
+```text
+ProductsController → ProductsService
+CartController     → CartService
+CartService        → ProductsService
+CartService        → DiscountsService
+CouponsController  → CouponsService
+```
+
+Esto permite probar lógica sin depender directamente de HTTP, reutilizar servicios y mantener controladores delgados.
+
+### Patrón 2: Dependency Injection / Inversion of Control — implementado
+
+NestJS y Angular utilizan **Dependency Injection** como mecanismo central de colaboración.
+
+El contenedor de NestJS resuelve las implementaciones. Esto reduce acoplamiento y facilita pruebas con mocks o providers alternativos.
+
+### Evolución opcional: Strategy para reglas de descuento
+
+Si el número de promociones creciera, el siguiente patrón natural sería **Strategy**:
+
+```ts
+export interface DiscountStrategy {
+  apply(context: DiscountContext): AppliedDiscount | null;
+}
+```
+
+```ts
+@Injectable()
+export class TechDiscountStrategy implements DiscountStrategy {
+  apply(context: DiscountContext): AppliedDiscount | null {
+    // regla TECH
+  }
+}
+```
+
+El motor podría iterar estrategias:
+
+```ts
+for (const strategy of this.strategies) {
+  const result = strategy.apply(context);
+
+  if (result) {
+    context.apply(result);
+  }
+}
+```
+
+Esto facilitaría agregar nuevas reglas promocionales.
+
+## 6. Backend: arquitectura modular por dominio
 
 El backend se organiza alrededor de funcionalidades de negocio:
 
@@ -91,7 +265,7 @@ información del cupón, por ejemplo mediante `coupon.discount / 100`.
 Esto reduce el acoplamiento entre la definición de un cupón y el
 algoritmo general de descuentos.
 
-## 3. Separación de responsabilidades
+## 7. Separación de responsabilidades
 
 La decisión central es mantener la lógica de negocio en el backend y no
 duplicarla en la interfaz.
@@ -111,7 +285,7 @@ Ejemplos:
 -   Los porcentajes de cupones se obtienen del modelo de cupón y no de
     una constante codificada en la vista.
 
-## 4. Frontend: arquitectura por features
+## 8. Frontend: arquitectura por features
 
 El frontend Angular está organizado por funcionalidades:
 
@@ -140,7 +314,7 @@ Los elementos reutilizables que no pertenecen exclusivamente a una
 pantalla se ubican en `shared`, como el componente de tarjeta de
 producto.
 
-## 5. Integración frontend-backend
+## 9. Integración frontend-backend
 
 El frontend consume el backend mediante servicios Angular. Esto evita
 dispersar llamadas HTTP en los componentes y permite que los componentes
@@ -160,23 +334,13 @@ El carrito carga su información desde el backend, permite aplicar
 cupones, eliminar productos y presenta los errores de la API junto al
 elemento que originó la operación.
 
-## 6. Manejo de stock
+## 10. Manejo de stock
 
 Una decisión importante durante el desarrollo fue convertir
 `ProductsService` en el responsable del stock disponible. Inicialmente
 el stock disponible se derivaba a partir de la cantidad del carrito;
 posteriormente se modificó el diseño para actualizar la fuente de stock
 al agregar o retirar productos.
-
-Ejemplo conceptual:
-
-``` text
-Stock inicial: 10
-Agregar al carrito: 2
-Stock disponible: 8
-Eliminar del carrito: 2
-Stock disponible: 10
-```
 
 La razón de centralizar esta responsabilidad es evitar que diferentes
 módulos mantengan versiones independientes del inventario.
@@ -185,7 +349,7 @@ Para una solución productiva, esta responsabilidad debería respaldarse
 con persistencia y mecanismos transaccionales/concurrentes en una base
 de datos o servicio de inventario.
 
-## 7. Modelos y contratos
+## 11. Modelos y contratos
 
 Se utilizan interfaces, enums y modelos explícitos para representar
 conceptos como productos, tipos de producto, elementos del carrito y
@@ -205,7 +369,7 @@ Una operación para agregar un producto puede requerir únicamente
 identificador y cantidad, mientras la respuesta del carrito contiene
 información enriquecida.
 
-## 8. Manejo de errores y estados
+## 12. Manejo de errores y estados
 
 La interfaz contempla estados de carga, no encontrado y errores
 provenientes del backend. En el carrito, los errores se presentan cerca
@@ -215,7 +379,7 @@ junto al campo del cupón.
 Esta decisión mejora la trazabilidad de la interacción para el usuario y
 evita mensajes genéricos sin contexto.
 
-## 9. Pruebas y validación
+## 13. Pruebas y validación
 
 El backend utiliza Jest y Supertest. El frontend utiliza el sistema de
 pruebas de Angular con Vitest instalado en el proyecto.
@@ -237,7 +401,7 @@ El objetivo no fue únicamente comprobar que el código compilara, sino
 detectar regresiones cuando cambiaban contratos compartidos, stock o
 reglas de descuentos.
 
-## 10. Persistencia y alcance
+## 14. Persistencia y alcance
 
 La solución fue construida para el alcance de una prueba técnica. No se
 incorporó una capa completa de persistencia ni infraestructura propia de
@@ -248,28 +412,7 @@ en el dominio solicitado. Su consecuencia es que el estado en memoria no
 ofrece durabilidad ni garantías de concurrencia equivalentes a una
 solución con base de datos.
 
-## 11. Por qué no existe un módulo Checkout
-
-No se implementó `CheckoutModule`, `CheckoutService` ni
-`CheckoutController`.
-
-El alcance desarrollado cubre catálogo, carrito, descuentos, cupones y
-cálculo del estado actual de la compra. Crear un módulo de checkout sin
-existir todavía conceptos como orden, pago, confirmación transaccional,
-idempotencia o reserva persistente de inventario habría añadido una
-abstracción sin una responsabilidad suficiente dentro del ejercicio.
-
-En una evolución real, Checkout podría extraerse cuando el flujo
-requiera, por ejemplo:
-
--   creación de órdenes;
--   integración con proveedor de pagos;
--   reserva transaccional de inventario;
--   idempotencia;
--   confirmación o compensación de operaciones;
--   eventos y notificaciones posteriores a la compra.
-
-## 12. Principios y patrones identificables
+## 15. Principios y patrones identificables
 
 La solución aplica principalmente principios pragmáticos de diseño:
 
@@ -287,12 +430,7 @@ La solución aplica principalmente principios pragmáticos de diseño:
 -   **Single Source of Truth para reglas críticas:** el backend es la
     autoridad para stock, validación y descuentos.
 
-No es necesario presentar la solución como una implementación completa
-de Clean Architecture, DDD o microservicios. La arquitectura es una
-aplicación modular cliente-servidor adecuada al tamaño y al alcance de
-la prueba.
-
-## 13. Evolución posible
+## 16. Evolución posible
 
 Si el sistema creciera, las siguientes mejoras serían naturales:
 
