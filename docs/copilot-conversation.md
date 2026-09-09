@@ -2517,3 +2517,313 @@ Backend errors are displayed below the coupon section.
 Frontend tests pass and the build completes without warnings.
 
 Made changes.
+
+User: I need you to update this code in backend and frontend, the % of the discount now lives in the Coupon model, the number is in the coupons.json in the key "discount", I don't want the 15% written in the discount service code
+
+GitHub Copilot: I’ll trace the current coupon model/data and discount calculation in both projects, then replace the hard-coded coupon percentage with the JSON-backed `discount` value and update the frontend model/tests as needed.
+
+Read 
+
+Read 
+
+Read 
+
+Read 
+
+Read 
+
+Read 
+
+The backend JSON and model already include `discount`, but the discount service still uses `15`, and the frontend coupon model is missing the field. I’ll switch the service to `coupon.discount`, update all typed test fixtures, and extend the frontend model so the API response remains consistent.
+
+Searched for regex `code: 'WELCOME2026'|code: 'INVALID'|Coupon|discount: 15|0\.15` (`**/backend/src/**/*.ts`), 125 results
+
+Searched for regex `Coupon|coupon` (`**/frontend/src/**/*.ts`), 24 results
+
+Read 
+
+Read 
+
+The change needs two consistency fixes beyond the service formula: backend test coupon fixtures must include `discount`, and the frontend `Coupon` interface must expose it. I’ll update those fixtures and keep the coupon percentage represented as the JSON value, so `discount: 30` produces a 30% calculation without any hard-coded coupon percentage.
+
+Generating patch (57 lines) in , , , , 
+
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+The hard-coded `15%` is removed from production discount logic; coupon percentages now come from `coupon.discount / 100`. I’ve synchronized the model and test fixtures, including the second JSON coupon, and will run backend tests/build plus frontend build/tests to catch any remaining shape mismatches.
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/backend; npm test -- --runInBand src/discounts/discounts.service.spec.ts src/coupons/coupons.service.spec.ts src/cart/cart.service.spec.ts
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/backend; npm run build
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/frontend; npm test -- --no-watch --no-progress
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/frontend; npm run build
+
+Searched for regex `percentage: 15|0\.15|discount: 15` (`**/backend/src/discounts/**`), 2 results
+
+Updated the discount logic so coupon percentages come from `coupons.json`.
+
+Changes:
+
+- `DiscountsService` now uses:
+  ```ts
+  coupon.discount / 100
+  ```
+- Removed the hard-coded `15%` from production discount logic.
+- Backend coupon model includes `discount`.
+- Frontend coupon model now includes `discount`.
+- Updated backend tests and fixtures for both:
+  - `WELCOME2026` at `15%`
+  - `EXTRADISCOUNT2026` at `30%`
+
+Validation passed:
+
+- Backend focused tests: 26 passed
+- Backend build passed
+- Frontend tests: 8 passed
+- Frontend build passed
+
+Made changes.
+
+User: I need to show a meesage to user when the 35% top of discout is reached, I need to show the next message "Congratulations, you have reached the limit of discounts" in the frontend
+
+GitHub Copilot: I’ll inspect the current cart discount response and frontend summary, then add a reliable cap indicator/message condition so the frontend shows exactly “Congratulations, you have reached the limit of discounts” when the total discount reaches 35%.
+
+Read 
+
+Read , lines 155 to 225
+
+Read , lines 55 to 85
+
+Read , lines 20 to 40
+
+Read 
+
+Read 
+
+The cart already exposes `discountPercentage`, but relying on a UI-only comparison would make the cap state implicit. I’ll add an explicit `discountLimitReached` boolean to the backend/frontend cart models, set it when the calculated percentage reaches 35%, and render the requested message in the cart summary.
+
+Searched for text `discountPercentage:` (`**/backend/src/**/*.ts`), 5 results
+
+Searched for text `discountPercentage:` (`**/frontend/src/**/*.ts`), 3 results
+
+Searched for text `discountPercentage` (`**/backend/src/**/*.spec.ts`), 10 results
+
+Generating patch (45 lines) in , , , , , , 
+
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+The explicit cap flag and frontend message are added. Existing cart tests also verify the flag is false below the cap and after clearing the cart; I’m running backend/frontend tests and builds now to validate the response contract and template.
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/backend; npm test -- --runInBand src/cart/cart.service.spec.ts src/discounts/discounts.service.spec.ts
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/backend; npm run build
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/frontend; npm test -- --no-watch --no-progress
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/frontend; npm run build
+
+All backend and frontend tests pass and both builds compile. The frontend build has only an 86-byte component stylesheet budget warning from the new message style; I’ll reuse an existing success style instead of adding another rule, then confirm the warning is gone.
+
+Generating patch (11 lines) in , 
+
+
+```
+
+```
+
+```
+
+```
+
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/frontend; npm run build
+
+Added the discount-limit message.
+
+When the cart reaches the maximum `35%` discount, the frontend now displays:
+
+```text
+Congratulations, you have reached the limit of discounts
+```
+
+Implementation:
+
+- Backend cart response now includes `discountLimitReached`.
+- The flag is set when `discountPercentage >= 35`.
+- Frontend cart model includes the new property.
+- Cart summary displays the message automatically when the limit is reached.
+
+Validation passed:
+
+- Backend tests passed
+- Frontend tests passed
+- Backend build passed
+- Frontend build passed without warnings
+
+Made changes.
+
+User: I need you to update the stock of each product when I add them to the cart, eg If total stock is 10 and I add 2 to cart, it will recalculate and update stock to 8, and If i remove product from cart, recalculate again and show stock 10.
+Also when I click add to cart to an Item, I want to be redirected to cart inmediatly
+
+GitHub Copilot: I’ll trace the current stock calculation, product model/API, and detail add-to-cart flow. I’ll update the authoritative backend stock state when adding/removing cart quantities, keep the cart response synchronized, and redirect to `/cart` after a successful add.
+
+Read , lines 30 to 227
+
+Read 
+
+Read 
+
+Read 
+
+Read 
+
+Read 
+
+Read 
+
+The current backend only derives `availableStock` from cart quantity; it never mutates the product catalog stock. I’ll make `ProductsService` own stock reservation/release, update stock on add/remove, expose the remaining stock in product/cart responses, and navigate to `/cart` only after a successful POST.
+
+Generating patch (97 lines) in , , , , , 
+
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+The stock ownership change is in place, but I’m running the focused backend build now to catch any compile/test issues from the new mutable-stock path before refining the test fixture behavior.
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/backend; npm run build
+Completed with input:  cd /d/Software/examen-ecommerce/backend; npm run build
+
+Generating patch (9 lines) in 
+
+
+```
+
+```
+
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/backend; npm test -- --runInBand src/cart/cart.service.spec.ts src/products/products.service.spec.ts
+Completed with input:  cd /d/Software/examen-ecommerce/backend; npm test -- --runInBand src/cart/cart.service.spec.ts src/products/products.service.spec.ts
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/backend; npm run build
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/frontend; npm test -- --no-watch --no-progress
+
+Checked , , no problems found
+
+The production build and frontend tests pass. Backend cart tests are failing only because their mock `ProductsService` still leaves stock at 10 and does not enforce the new mutable-stock behavior; I’ll update that fixture to share and mutate the product object, then rerun the backend tests.
+
+Generating patch (42 lines) in 
+
+
+```
+
+```
+
+
+Generating patch (10 lines) in 
+
+
+```
+
+```
+
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/backend; npm test -- --runInBand src/cart/cart.service.spec.ts src/products/products.service.spec.ts
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/backend; npm run lint
+
+Ran terminal command:  cd /d/Software/examen-ecommerce/frontend; npm run build
+
+Implemented stock updates and cart redirect.
+
+Backend:
+
+- Adding `2` units decreases product stock from `10` to `8`.
+- Adding more units validates against the updated stock.
+- Removing products restores stock.
+- Removing all cart units restores the original stock.
+- Product and cart responses now show the recalculated stock.
+
+Frontend:
+
+- Clicking `Add to cart` sends the POST request.
+- After a successful request, the user is redirected immediately to:
+  ```text
+  /cart
+  ```
+- The cart count remains synchronized.
+
+Validation passed:
+
+- Backend stock/cart tests: 21 passed
+- Backend build and lint passed
+- Frontend build passed
+
+Made changes.
