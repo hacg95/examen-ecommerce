@@ -7,8 +7,20 @@ import { CouponsService } from '../coupons/coupons.service';
 
 describe('CartService', () => {
   let service: CartService;
+  const testProduct = {
+    id: 'prod-001',
+    name: 'Test product',
+    description: 'Test product',
+    price: 10,
+    currency: 'USD',
+    type: 'TECH',
+    stock: 10,
+    imageUrl: 'test-image',
+  };
 
   beforeEach(async () => {
+    testProduct.stock = 10;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CartService,
@@ -16,19 +28,14 @@ describe('CartService', () => {
           provide: ProductsService,
           useValue: {
             findOne: jest.fn((id: string) =>
-              id === 'prod-001'
-                ? {
-                    id: 'prod-001',
-                    name: 'Test product',
-                    description: 'Test product',
-                    price: 10,
-                    currency: 'USD',
-                    type: 'TECH',
-                    stock: 10,
-                    imageUrl: 'test-image',
-                  }
-                : undefined,
+              id === 'prod-001' ? testProduct : undefined,
             ),
+            decreaseStock: jest.fn((id: string, quantity: number) => {
+              if (id === 'prod-001') testProduct.stock -= quantity;
+            }),
+            increaseStock: jest.fn((id: string, quantity: number) => {
+              if (id === 'prod-001') testProduct.stock += quantity;
+            }),
           },
         },
         DiscountsService,

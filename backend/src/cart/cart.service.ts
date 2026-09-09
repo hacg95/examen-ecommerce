@@ -52,7 +52,7 @@ export class CartService {
 			(item) => item.product.id === productId,
 		);
 		const currentQuantity = existingItem?.quantity ?? 0;
-		const availableStock = product.stock - currentQuantity;
+		const availableStock = product.stock;
 
 		if (quantity > availableStock) {
 			throw new BadRequestException(
@@ -66,6 +66,7 @@ export class CartService {
 		}
 
 		const requestedQuantity = currentQuantity + quantity;
+		this.productsService.decreaseStock(productId, quantity);
 
 		if (existingItem) {
 			existingItem.quantity = requestedQuantity;
@@ -76,7 +77,7 @@ export class CartService {
 			const cartItem: CartItem = {
 				product,
 				quantity,
-				availableStock: product.stock - quantity,
+				availableStock: product.stock,
 				subtotal: product.price * quantity,
 				discount: 0,
 				discountPercentage: 0,
@@ -124,6 +125,8 @@ export class CartService {
 			item.quantity -= quantityToRemove;
 			item.subtotal = item.product.price * item.quantity;
 		}
+
+		this.productsService.increaseStock(productId, quantityToRemove);
 
 		if (this.cart.items.length === 0) {
 			this.cart.coupon = undefined;
@@ -206,7 +209,7 @@ export class CartService {
 
 	private updateItemTotals(): void {
 		for (const item of this.cart.items) {
-			item.availableStock = Math.max(0, item.product.stock - item.quantity);
+			item.availableStock = item.product.stock;
 			item.discount = this.getTechDiscount(item);
 			item.discountPercentage = this.getDiscountPercentage(
 				item.discount,

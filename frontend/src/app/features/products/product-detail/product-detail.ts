@@ -1,6 +1,6 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Product } from '../../../shared/models/product.model';
 import { Products } from '../services/products';
 import { CartService } from '../../cart/services/cart';
@@ -14,6 +14,7 @@ import { CartService } from '../../cart/services/cart';
 export class ProductDetail {
   private readonly productsService = inject(Products);
   private readonly cartService = inject(CartService);
+  private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   protected readonly product = signal<Product | null>(null);
   protected readonly loading = signal(true);
@@ -84,7 +85,7 @@ export class ProductDetail {
     this.cartService.addItem(selectedProduct.id, this.quantity()).subscribe({
       next: () => {
         this.adding.set(false);
-        this.addSuccess.set('Added to cart.');
+        this.router.navigate(['/cart']);
       },
       error: (error: { error?: { message?: string } | string }) => {
         this.adding.set(false);

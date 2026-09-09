@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { ProductDetail } from './product-detail';
 import { Products } from '../services/products';
@@ -25,6 +25,10 @@ describe('ProductDetail', () => {
         {
           provide: CartService,
           useValue: { addItem: () => of({}) },
+        },
+        {
+          provide: Router,
+          useValue: { navigate: () => Promise.resolve(true) },
         },
       ],
     }).compileComponents();

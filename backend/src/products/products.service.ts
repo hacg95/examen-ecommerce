@@ -17,4 +17,20 @@ export class ProductsService {
 	findOne(id: string): Product | undefined {
 		return this.products.find((product) => product.id === id);
 	}
+
+	decreaseStock(id: string, quantity: number): void {
+		const product = this.findOne(id);
+
+		if (product) {
+			product.stock -= quantity;
+		}
+	}
+
+	increaseStock(id: string, quantity: number): void {
+		const product = this.findOne(id);
+
+		if (product) {
+			product.stock += quantity;
+		}
+	}
 }
