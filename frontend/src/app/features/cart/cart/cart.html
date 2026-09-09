@@ -75,6 +75,9 @@
 						<div><span>Subtotal</span><strong>{{ currentCart.subtotal | currency: 'USD' }}</strong></div>
 						<div><span>Discount <small>({{ currentCart.discountPercentage }}%)</small></span><strong class="discount-value">-{{ currentCart.discount | currency: 'USD' }}</strong></div>
 					</div>
+					@if (currentCart.discountLimitReached) {
+						<p class="coupon-applied">Congratulations, you have reached the limit of discounts</p>
+					}
 					<div class="summary-total"><span>Total</span><strong>{{ currentCart.total | currency: 'USD' }}</strong></div>
 					<button class="checkout-button" type="button">Checkout <span aria-hidden="true">-&gt;</span></button>
 				</aside>

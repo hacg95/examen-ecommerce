@@ -36,7 +36,9 @@ describe('CartService', () => {
           provide: CouponsService,
           useValue: {
             findByCode: jest.fn((code: string) =>
-              code === 'WELCOME2026' ? { code, valid: true } : undefined,
+              code === 'WELCOME2026'
+                ? { code, valid: true, discount: 15 }
+                : undefined,
             ),
           },
         },
@@ -103,10 +105,15 @@ describe('CartService', () => {
 
     const cart = service.applyCoupon('WELCOME2026');
 
-    expect(cart.coupon).toEqual({ code: 'WELCOME2026', valid: true });
+    expect(cart.coupon).toEqual({
+      code: 'WELCOME2026',
+      valid: true,
+      discount: 15,
+    });
     expect(cart.discount).toBe(11.75);
     expect(cart.discountPercentage).toBe(23.5);
     expect(cart.discountPercentage).toBeLessThanOrEqual(35);
+    expect(cart.discountLimitReached).toBe(false);
     expect(cart.total).toBe(38.25);
     expect(cart.items[0].discount).toBe(5);
     expect(cart.items[0].availableStock).toBe(5);
@@ -181,6 +188,7 @@ describe('CartService', () => {
     expect(cart.subtotal).toBe(0);
     expect(cart.total).toBe(0);
     expect(cart.discountPercentage).toBe(0);
+    expect(cart.discountLimitReached).toBe(false);
   });
 
   it('rejects removing more units than are in the cart', () => {

@@ -38,8 +38,10 @@ export class DiscountsService {
 		if (coupon?.valid) {
 			appliedDiscounts.push({
 				type: DiscountType.COUPON,
-				percentage: 15,
-				amount: this.round(amountAfterThreshold * 0.15),
+				percentage: coupon.discount,
+				amount: this.round(
+					amountAfterThreshold * (coupon.discount / 100),
+				),
 			});
 		}
 

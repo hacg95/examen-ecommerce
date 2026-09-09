@@ -13,7 +13,7 @@ describe('Cart', () => {
       imports: [Cart],
       providers: [provideRouter([]), {
           provide: CartService,
-          useValue: { getCart: () => of({ items: [], subtotal: 0, discount: 0, discountPercentage: 0, total: 0, appliedDiscounts: [] }) },
+          useValue: { getCart: () => of({ items: [], subtotal: 0, discount: 0, discountPercentage: 0, discountLimitReached: false, total: 0, appliedDiscounts: [] }) },
         },
       ],
     }).compileComponents();

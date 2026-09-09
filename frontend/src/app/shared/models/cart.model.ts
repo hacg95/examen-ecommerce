@@ -7,6 +7,7 @@ export interface Cart {
   subtotal: number;
   discount: number;
   discountPercentage: number;
+  discountLimitReached: boolean;
   total: number;
   appliedDiscounts: AppliedDiscount[];
   coupon?: Coupon;

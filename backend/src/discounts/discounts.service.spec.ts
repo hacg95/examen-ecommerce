@@ -44,7 +44,7 @@ describe('DiscountsService', () => {
   it('applies the valid WELCOME2026 coupon', () => {
     const result = service.calculate(
       [item(ProductType.OTHER, 100)],
-      { code: 'WELCOME2026', valid: true },
+      { code: 'WELCOME2026', valid: true, discount: 15 },
     );
 
     expect(result.discountAmount).toBe(15);
@@ -55,7 +55,7 @@ describe('DiscountsService', () => {
   it('does not apply an invalid coupon', () => {
     const result = service.calculate(
       [item(ProductType.OTHER, 100)],
-      { code: 'INVALID', valid: false },
+      { code: 'INVALID', valid: false, discount: 0 },
     );
 
     expect(result.discountAmount).toBe(0);
@@ -65,7 +65,7 @@ describe('DiscountsService', () => {
   it('caps the total discount at 35 percent', () => {
     const result = service.calculate(
       [item(ProductType.TECH, 1000)],
-      { code: 'WELCOME2026', valid: true },
+      { code: 'WELCOME2026', valid: true, discount: 15 },
     );
 
     expect(result.discountAmount).toBe(273.25);

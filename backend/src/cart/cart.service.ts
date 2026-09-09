@@ -14,6 +14,7 @@ export class CartService {
 		subtotal: 0,
 		discount: 0,
 		discountPercentage: 0,
+		discountLimitReached: false,
 		total: 0,
 		appliedDiscounts: [],
 	};
@@ -192,6 +193,7 @@ export class CartService {
 			this.cart.discount,
 			this.cart.subtotal,
 		);
+		this.cart.discountLimitReached = this.cart.discountPercentage >= 35;
 		this.cart.total = discountResult.finalAmount;
 		this.cart.appliedDiscounts = discountResult.appliedDiscounts;
 	}
